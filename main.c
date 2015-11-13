@@ -3,8 +3,8 @@
 #include "time.h"
 #include "string.h"
 
-#define MAXSIZE 104857600
-#define MINSIZE 100
+#define MAXSIZE 10485760
+#define MINSIZE 1000
 #define RUNTIMES 50
 #define ITERATIONS 1000000
 
@@ -18,6 +18,7 @@ void printSequentialCPUInfo(FILE* resultFile);
 void printRandomAccessCPUInfo(FILE* resultFile);
 size_t getRandom(size_t limit, size_t* indexArray, size_t i);
 int isIndexInArray(size_t index, size_t* indexArray, size_t max);
+void shuffle(size_t *array, size_t n);
 
 int main() {
 	printf("Programm is working...\n");
@@ -78,7 +79,7 @@ void printSequentialCPUInfo(FILE* resultFile) {
 	size_t min = MINSIZE / cNodeSize;
 	size_t max = MAXSIZE / cNodeSize;
 
-	for(size_t size = min; size < max; size *= 2) {
+	for(size_t size = min; size < max; size *= 2 ) {
 		struct CNode *buff = malloc(size * sizeof(struct CNode));
 		
 		for(size_t i = 0; i < size - 1; i++) {
@@ -103,7 +104,12 @@ void printSequentialCPUInfo(FILE* resultFile) {
 
 
 		runTime /= RUNTIMES;
-		
+
+		// if(size > 100000){
+		// 	size += (5000 * min);
+		// }else{
+		// 	size += min;
+		// }		
 
 		free(buff);
 
@@ -128,15 +134,23 @@ void printRandomAccessCPUInfo(FILE* resultFile) {
 	size_t min = MINSIZE / cNodeSize;
 	size_t max = MAXSIZE / cNodeSize;
 
-	for(size_t size = min; size < max; size *= 2) {
+	for(size_t size = min; size < max; size *= 2 ) {
+
 		struct CNode *buff = malloc(size * sizeof(struct CNode));
 
 		size_t *array = malloc(size * sizeof(size_t));
 		memset(array, 0, size * sizeof(size_t));
 
 		for(size_t i = 0; i < size; i++) {
-			size_t pointer = getRandom(size, array, i);
-			buff[i].next = &buff[pointer];
+			array[i] = i;
+		}
+
+		shuffle(array, size);
+
+
+		for(size_t i = 0; i < size; i++) {
+
+			buff[i].next = &buff[array[i]];
 		}
 
 		clock_t begin, end; 
@@ -156,6 +170,11 @@ void printRandomAccessCPUInfo(FILE* resultFile) {
 
 		runTime /= RUNTIMES;
 		
+		// if(size > 100000){
+		// 	size += 5000 * min;
+		// }else{
+		// 	size += min;
+		// }
 
 		free(array);
 		free(buff);
@@ -168,24 +187,40 @@ void printRandomAccessCPUInfo(FILE* resultFile) {
 	fprintf(resultFile, "\n\n---------Random access about CPU cache--------\n\n");
 }
 
-size_t getRandom(size_t limit, size_t* indexArray, size_t i) {
-	size_t random_number;
-	srand(time(NULL));
 
-	do {
-		random_number = rand() % limit;
-	} while ( (random_number > limit) && isIndexInArray(random_number, indexArray, i) );
-
-	indexArray[i] = random_number;
-	return random_number;
+void shuffle(size_t *array, size_t n)
+{
+    if (n > 1) 
+    {
+        size_t i;
+        for (i = 0; i < n - 1; i++) 
+        {
+          size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+          size_t t = array[j];
+          array[j] = array[i];
+          array[i] = t;
+        }
+    }
 }
 
-int isIndexInArray(size_t index, size_t* indexArray, size_t max){
+// size_t getRandom(size_t limit, size_t* indexArray, size_t i) {
+// 	size_t random_number;
+// 	srand(time(NULL));
 
-	for (size_t i = 0; i < max; i++){
-		if(indexArray[i] == index){
-			return 1;
-		}
-	}
-	return 0;
-};
+// 	do {
+// 		random_number = rand() % limit;
+// 	} while ( (random_number > limit) && isIndexInArray(random_number, indexArray, i) );
+
+// 	indexArray[i] = random_number;
+// 	return random_number;
+// }
+
+// int isIndexInArray(size_t index, size_t* indexArray, size_t max){
+
+// 	for (size_t i = 0; i < max; i++){
+// 		if(indexArray[i] == index){
+// 			return 1;
+// 		}
+// 	}
+// 	return 0;
+// };
