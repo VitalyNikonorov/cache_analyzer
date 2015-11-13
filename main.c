@@ -3,7 +3,7 @@
 #include "time.h"
 #include "string.h"
 
-#define MAXSIZE 1048576000
+#define MAXSIZE 104857600
 #define MINSIZE 100
 #define RUNTIMES 50
 #define ITERATIONS 1000000
@@ -44,7 +44,13 @@ int main() {
 
 void printSystemCPUInfo(FILE* resultFile) {
 	FILE *cpuInfo;
-	cpuInfo = popen("sysctl -a | grep cachesize", "r");
+	#ifdef __linux__
+		cpuInfo = popen("lscpu | grep cache", "r");
+	#elif __APPLE__
+		cpuInfo = popen("sysctl -a | grep cachesize", "r");
+	#else 
+		return;
+	#endif	
 
 	fprintf(resultFile, "\n\n---------System information about CPU cache:--------\n\n");
 	
